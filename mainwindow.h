@@ -51,6 +51,8 @@ private slots:
     void setLineEditValue_Blue(int value);
     void setLineEditValue_Red(int value);
     void setLineEditValue_Green(int value);
+    void setLineEditValue_Thickness(int value);
+
     void setContoursColor_Blue(int value);
     void setContoursColor_Red(int value);
     void setContoursColor_Green(int value);

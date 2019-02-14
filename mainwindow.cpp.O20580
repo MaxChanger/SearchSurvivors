@@ -31,7 +31,7 @@ int _erode = 3;  //侵蚀
 
 int _contoursRed = 0;
 int _contoursGreen = 255;
-int _contoursBlue = 25;
+int _contoursBlue = 50;
 
 int _thickness = 3;
 int _lineType = 8;
@@ -148,8 +148,7 @@ void MainWindow::LoopToDealFrame()
                 // ui->outputREC->append("add one frame");
             }
         }else{
-            ui->output->append("<font color=\"#FF0000\">视频读取结束</font>");
-            return;
+            ui->output->append("视频读取结束");
         }
     }
 }
@@ -335,22 +334,19 @@ void MainWindow::sliderRGBinit(){
 
     ui->BlueSlider->setMinimum(0);          //设置滑动条控件的最小值
     ui->BlueSlider->setMaximum(255);        //设置滑动条控件的最大值
-    ui->BlueSlider->setValue(_thresholdBlue);   //设置滑动条控件的值
-    ui->BlueSlider->setPageStep(1);             //设置每次滑动加 1
-
+    ui->BlueSlider->setValue(_thresholdBlue);    //设置滑动条控件的值
     ui->BlueText->setText(QString::number(_thresholdBlue));
 
     ui->RedSlider->setMinimum(0);
     ui->RedSlider->setMaximum(255);
     ui->RedSlider->setValue(_thresholdRed);
-    ui->RedSlider->setPageStep(1);
     ui->RedText->setText(QString::number(_thresholdRed));
 
     ui->GreenSlider->setMinimum(0);
     ui->GreenSlider->setMaximum(255);
     ui->GreenSlider->setValue(_thresholdGreen);
-    ui->GreenSlider->setPageStep(1);
     ui->GreenText->setText(QString::number(_thresholdGreen));
+
 
     connect(ui->BlueSlider, SIGNAL(valueChanged(int)), this, SLOT(setLineEditValue_Blue(int)));
     connect(ui->RedSlider, SIGNAL(valueChanged(int)), this, SLOT(setLineEditValue_Red(int)));
