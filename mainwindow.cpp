@@ -2,9 +2,6 @@
 #include "ui_mainwindow.h"
 #include <iostream>
 #include <vector>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <ctime>
 #include <stdio.h>
 #include <string>
@@ -13,6 +10,8 @@
 #include <QFileDialog>
 #include <QCameraInfo>
 #include <QDateTime>
+#include <QColor>
+#include <QColorDialog>
 
 using namespace std;
 using namespace cv;
@@ -28,7 +27,11 @@ int _thresholdGreen = 255;
 int _thresholdRed = 80;
 int _dilate = 0; //扩张
 int _erode = 3;  //侵蚀
-
+int _contoursRed = 0;
+int _contoursGreen = 255;
+int _contoursBlue = 0;
+int _thickness = 2;
+int _lineType = 8;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -44,6 +47,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->output->append("欢迎使用红外热成像无人机协助搜救系统！");
     ui->Lcd_play->display("00:00:00");
 
+    ui->label->setFrameShape (QFrame::Box);
+    ui->label->setStyleSheet("border-width: 1px;border-style: solid;border-color: rgb(128, 128, 128);");
+
     time_clock = new QTimer();
     time_clock->setInterval(30);    //超时时间
     time_clock->start();
@@ -52,7 +58,9 @@ MainWindow::MainWindow(QWidget *parent) :
     foreach (const QCameraInfo &cameraInfo , QCameraInfo::availableCameras()) {
         ui->getCameraName->addItem(cameraInfo.description());
     }
+    sliderRGBinit();
 
+    initStyle();
 }
 
 MainWindow::~MainWindow()
@@ -61,25 +69,29 @@ MainWindow::~MainWindow()
 }
 void MainWindow::on_Process_clicked()
 {
-    startProcess = true;
-    ui->output->append("开启检测！");
+    if(capture.isOpened()){
+        startProcess = true;
+        ui->output->append("开启检测！");
+    }
 }
+
 void MainWindow::on_EndProcess_clicked()
 {
-    startProcess = false;
-    ui->output->append("停止检测！");
-
+    if(capture.isOpened()){
+        startProcess = false;
+        ui->output->append("停止检测！");
+    }
 }
 
 void MainWindow::on_OpenCamera_clicked()
 {
     int num = ui->getCameraName->currentIndex() - 1;
-//    printf("%d\n",num);
+    //    printf("%d\n",num);
     capture.open(num);
     if(capture.isOpened()){
         ui->output->append("摄像头打开成功！");
     }else{
-        ui->output->append("摄像头打开失败，请检测是否正确链接。");
+        ui->output->append("<font color=\"#FF0000\">摄像头打开失败，请检测是否正确连接。</font>");
     }
     connect(time_clock, SIGNAL(timeout()), this, SLOT(LoopToDealFrame()));    //当达到超时时间，则发射信号，执行指定的槽函数
 }
@@ -95,7 +107,7 @@ void MainWindow::on_OpenFile_clicked()
         ui->output->append(file_name);
         ui->getCameraName->setCurrentIndex(0);
     }else{
-        ui->output->append("视频打开失败！");
+        ui->output->append("<font color=\"#FF0000\">视频打开失败！</font>");
     }
     connect(time_clock, SIGNAL(timeout()), this, SLOT(LoopToDealFrame()));    //当达到超时时间，则发射信号，执行指定的槽函数
 
@@ -125,10 +137,10 @@ void MainWindow::LoopToDealFrame()
             }
         }
     }
-    else
-    {
-        cout << "not open" << endl;
-    }
+//    else
+//    {
+//        cout << "not open" << endl;
+//    }
 }
 
 void MainWindow::findRed(cv::Mat &img, cv::Mat &out, int thresholdBlue = 100, int thresholdGreen = 100, int thresholdRed = 150)
@@ -164,7 +176,7 @@ double MainWindow::findLargestContour(cv::Mat &img, cv::Mat &out)
 
     if (maxIndex != 0)
     {
-        drawContours( out, contours, maxIndex, Scalar(0,0,0), 6, 8, hierarchy, 0, Point() );
+        drawContours( out, contours, maxIndex, Scalar(_contoursRed,_contoursGreen,_contoursBlue), _thickness, _lineType, hierarchy, 0, Point() );
     }
 
     return maxArea;
@@ -216,7 +228,7 @@ void MainWindow::on_StartREC_clicked()
         REC_flag = true;
         QDateTime time = QDateTime::currentDateTime();
         QString dateTime = time.toString("yyyy-MM-dd-hh-mm-ss");
-        QString file_name= QString("Video%1.avi").arg(dateTime);
+        QString file_name= QString("video%1.avi").arg(dateTime);
         QString s = file_path;
         QString newname = s.append('/').append(file_name);
         s.clear();
@@ -245,35 +257,41 @@ void MainWindow::on_StartREC_clicked()
 void MainWindow::on_EndREC_clicked()
 {
     if(capture.isOpened()){
-        REC_flag = false;
-        saveVideo.release();
-        ui->outputREC->append("结束录制");
-        // 结束计时
-        delete this->pTimer;
+        if(REC_flag == true){
+            REC_flag = false;
+            saveVideo.release();
+            ui->outputREC->append("<font color=\"#FF0000\">结束录制</font>");
+            // 结束计时
+            delete this->pTimer;
+        }
     }
 }
 
 void MainWindow::on_PauseREC_clicked()
 {
     if(capture.isOpened()){
-        REC_flag = false;
-        ui->outputREC->append("暂停");
+        if(REC_flag == true){
+            REC_flag = false;
+            ui->outputREC->append("暂停");
+        }
     }
 }
 
 void MainWindow::on_FilePath_clicked()
 {
-    if(capture.isOpened()){
-        file_path = QFileDialog::getExistingDirectory(this, "请选择保存路径...", "./");
+    //if(capture.isOpened()){
+        file_path = QFileDialog::getExistingDirectory(this, "请选择保存路径", "./");
         ui->outputREC->append(file_path);
-    }
+    //}
 }
 
 void MainWindow::on_pushButton_clicked()
 {
     if(capture.isOpened()){
-        REC_flag = true;
-        ui->outputREC->append("继续录制");
+        if(REC_flag == false){
+            REC_flag = true;
+            ui->outputREC->append("继续");
+        }
     }
 }
 
@@ -296,3 +314,136 @@ void MainWindow::updateDisplay()
     // ui->outputREC->append(timeStr);
     this->ui->Lcd_play->display(timeStr);
 }
+
+void MainWindow::sliderRGBinit(){
+
+
+    ui->BlueSlider->setMinimum(0);          //设置滑动条控件的最小值
+    ui->BlueSlider->setMaximum(255);        //设置滑动条控件的最大值
+    ui->BlueSlider->setValue(_thresholdBlue);    //设置滑动条控件的值
+    ui->BlueText->setText(QString::number(_thresholdBlue));
+
+    ui->RedSlider->setMinimum(0);
+    ui->RedSlider->setMaximum(255);
+    ui->RedSlider->setValue(_thresholdRed);
+    ui->RedText->setText(QString::number(_thresholdRed));
+
+    ui->GreenSlider->setMinimum(0);
+    ui->GreenSlider->setMaximum(255);
+    ui->GreenSlider->setValue(_thresholdGreen);
+    ui->GreenText->setText(QString::number(_thresholdGreen));
+
+
+    connect(ui->BlueSlider, SIGNAL(valueChanged(int)), this, SLOT(setLineEditValue_Blue(int)));
+    connect(ui->RedSlider, SIGNAL(valueChanged(int)), this, SLOT(setLineEditValue_Red(int)));
+    connect(ui->GreenSlider, SIGNAL(valueChanged(int)), this, SLOT(setLineEditValue_Green(int)));
+
+    // spinBox 边框
+    ui->spinBoxBlue->setValue(_contoursBlue);
+    ui->spinBoxGreen->setValue(_contoursGreen);
+    ui->spinBoxRed->setValue(_contoursRed);
+    QString strcol = QString("background-color: rgb(%1,%2,%3);").arg(_contoursRed).arg(_contoursGreen).arg(_contoursBlue);
+    ui->showColor->setStyleSheet(strcol);
+    strcol.clear();
+
+    connect(ui->spinBoxBlue, SIGNAL(valueChanged(int)), this, SLOT(setContoursColor_Blue(int)));
+    connect(ui->spinBoxRed, SIGNAL(valueChanged(int)), this, SLOT(setContoursColor_Red(int)));
+    connect(ui->spinBoxGreen, SIGNAL(valueChanged(int)), this, SLOT(setContoursColor_Green(int)));
+
+}
+
+void MainWindow::setContoursColor_Blue(int value){
+    _contoursBlue = ui->spinBoxBlue->value();
+
+    QString strcol = QString("background-color: rgb(%1,%2,%3);").arg(_contoursRed).arg(_contoursGreen).arg(_contoursBlue);
+    ui->showColor->setStyleSheet(strcol);
+    strcol.clear();
+}
+
+void MainWindow::setContoursColor_Green(int value){
+    _contoursGreen = ui->spinBoxGreen->value();
+
+    QString strcol = QString("background-color: rgb(%1,%2,%3);").arg(_contoursRed).arg(_contoursGreen).arg(_contoursBlue);
+    ui->showColor->setStyleSheet(strcol);
+    strcol.clear();
+}
+
+void MainWindow::setContoursColor_Red(int value){
+    _contoursRed = ui->spinBoxRed->value();
+
+    QString strcol = QString("background-color: rgb(%1,%2,%3);").arg(_contoursRed).arg(_contoursGreen).arg(_contoursBlue);
+    ui->showColor->setStyleSheet(strcol);
+    strcol.clear();
+}
+
+void MainWindow::setLineEditValue_Blue(int value){
+    int pos = ui->BlueSlider->value();
+    QString str = QString("%1").arg(pos);
+    ui->BlueText->setText(str);
+    _thresholdBlue = pos;
+
+}
+
+void MainWindow::setLineEditValue_Red(int value){
+    int pos = ui->RedSlider->value();
+    QString str = QString("%1").arg(pos);
+    ui->RedText->setText(str);
+    _thresholdRed = pos;
+
+}
+
+void MainWindow::setLineEditValue_Green(int value){
+    int pos = ui->GreenSlider->value();
+    QString str = QString("%1").arg(pos);
+    ui->GreenText->setText(str);
+    _thresholdGreen = pos;
+}
+
+void MainWindow::initStyle()
+{
+    //加载样式表
+    //QFile file(":/qss/psblack.css");
+    QFile file(":/qss/flatwhite.css");
+    //QFile file(":/qss/lightblue.css");
+    if (file.open(QFile::ReadOnly)) {
+        QString qss = QLatin1String(file.readAll());
+        QString paletteColor = qss.mid(20, 7);
+        qApp->setPalette(QPalette(QColor(paletteColor)));
+        qApp->setStyleSheet(qss);
+        file.close();
+    }
+}
+
+void MainWindow::on_showColor_clicked()
+{
+    QColor color = QColorDialog::getColor(Qt::blue);
+    if(color.isValid()){
+        // ui->output->setPalette(QPalette(c));
+        _contoursBlue = color.blue();
+        _contoursGreen = color.green();
+        _contoursRed = color.red();
+
+        ui->spinBoxBlue->setValue(_contoursBlue);
+        ui->spinBoxGreen->setValue(_contoursGreen);
+        ui->spinBoxRed->setValue(_contoursRed);
+        // setStyleSheet中后边为字符串，需要拼接
+        // QString strcol = "background-color: rgb(";
+        // strcol.append(QString::number(_contoursRed)).append(',');
+        // strcol.append(QString::number(_contoursGreen)).append(',');
+        // strcol.append(QString::number(_contoursBlue)).append(");");
+
+        QString strcol = QString("background-color: rgb(%1,%2,%3);").arg(_contoursRed).arg(_contoursGreen).arg(_contoursBlue);
+        ui->showColor->setStyleSheet(strcol);
+        strcol.clear();
+    }
+}
+
+
+//QColor  BenQWord::IntToQColor(const int &intColor)
+//{
+//    //将Color 从int 转换成 QColor
+//    int red = intColor & 255;
+//    int green = intColor >> 8 & 255;
+//    int blue = intColor >> 16 & 255;
+//    return QColor(red, green, blue);
+//}

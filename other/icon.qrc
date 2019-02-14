@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icon/end.png</file>
+        <file>icon/jixu.png</file>
+        <file>icon/REC_2.png</file>
+        <file>icon/zan.png</file>
+        <file>icon/save.png</file>
+        <file>icon/leida.png</file>
+    </qresource>
+</RCC>

@@ -46,6 +46,18 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void sliderRGBinit();
+
+    void setLineEditValue_Blue(int value);
+    void setLineEditValue_Red(int value);
+    void setLineEditValue_Green(int value);
+    void setContoursColor_Blue(int value);
+    void setContoursColor_Red(int value);
+    void setContoursColor_Green(int value);
+    void initStyle();
+
+    void on_showColor_clicked();
+
 private:
     Ui::MainWindow *ui;
     QImage img;
