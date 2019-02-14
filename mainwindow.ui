@@ -132,7 +132,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <layout class="QGridLayout" name="gridLayout">
      <item row="1" column="2">
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="holdonREC">
        <property name="text">
         <string>继续</string>
        </property>
@@ -361,7 +361,7 @@ p, li { white-space: pre-wrap; }
      <rect>
       <x>850</x>
       <y>390</y>
-      <width>311</width>
+      <width>251</width>
       <height>30</height>
      </rect>
     </property>
@@ -373,17 +373,17 @@ p, li { white-space: pre-wrap; }
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>R:</string>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="2">
       <widget class="QLabel" name="label_7">
        <property name="text">
         <string>G:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QSpinBox" name="spinBoxBlue">
+       <property name="maximum">
+        <number>255</number>
        </property>
       </widget>
      </item>
@@ -401,23 +401,10 @@ p, li { white-space: pre-wrap; }
        </property>
       </widget>
      </item>
-     <item row="0" column="5">
-      <widget class="QSpinBox" name="spinBoxBlue">
-       <property name="maximum">
-        <number>255</number>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="6">
-      <widget class="QPushButton" name="showColor">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>...</string>
+        <string>R:</string>
        </property>
       </widget>
      </item>
@@ -429,7 +416,7 @@ p, li { white-space: pre-wrap; }
       <x>850</x>
       <y>440</y>
       <width>121</width>
-      <height>21</height>
+      <height>23</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout_3">
@@ -458,7 +445,7 @@ p, li { white-space: pre-wrap; }
       <x>980</x>
       <y>440</y>
       <width>181</width>
-      <height>21</height>
+      <height>24</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -470,6 +457,28 @@ p, li { white-space: pre-wrap; }
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QPushButton" name="showColor">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>1120</x>
+      <y>390</y>
+      <width>41</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="text">
+     <string>...</string>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>

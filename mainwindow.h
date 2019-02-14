@@ -44,9 +44,9 @@ private slots:
 
     void on_FilePath_clicked();
 
-    void on_pushButton_clicked();
+    void on_holdonREC_clicked();
 
-    void sliderRGBinit();
+    void ui_init();
 
     void setLineEditValue_Blue(int value);
     void setLineEditValue_Red(int value);
@@ -60,6 +60,7 @@ private slots:
 
     void on_showColor_clicked();
 
+
 private:
     Ui::MainWindow *ui;
     QImage img;
@@ -67,7 +68,7 @@ private:
     QString str = "";
     QString file_path=".";
     bool startProcess = false;
-    bool REC_flag = false;
+    int REC_flag = 0; // 0 关闭/录像结束 1 开始录像 2 暂停录像 3 继续录像
 
     QTimer *pTimer;
     QTime baseTime;

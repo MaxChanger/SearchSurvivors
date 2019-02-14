@@ -22,7 +22,7 @@ VideoWriter saveVideo;
 //#define GUI 1 // Use this when debugging on PC
 
 int _BAUD = 115200;
-int _thresholdBlue = 50; //阈值的蓝色 //50 50 80
+int _thresholdBlue = 50; //阈值的蓝色
 int _thresholdGreen = 50;
 int _thresholdRed = 80;
 
@@ -35,23 +35,16 @@ int _contoursBlue = 25;
 
 int _thickness = 3;
 int _lineType = 8;
+double t = 0;
+double fps;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setWindowFlags(windowFlags()&~Qt::WindowMaximizeButtonHint);    //禁止最大化
-    setFixedSize(this->width(),this->height()); // 禁止拖动窗口大小
-
-    ui->output->document()->setMaximumBlockCount(100);
-    ui->outputREC->document()->setMaximumBlockCount(100);
-
-    ui->output->append("欢迎使用红外热成像无人机协助搜救系统！");
-    ui->Lcd_play->display("00:00:00");
-
-    ui->label->setFrameShape (QFrame::Box);
-    ui->label->setStyleSheet("border-width: 1px;border-style: solid;border-color: rgb(128, 128, 128);");
+    initStyle();
+    ui_init();
 
     time_clock = new QTimer();
     time_clock->setInterval(30);    //超时时间
@@ -61,9 +54,8 @@ MainWindow::MainWindow(QWidget *parent) :
     foreach (const QCameraInfo &cameraInfo , QCameraInfo::availableCameras()) {
         ui->getCameraName->addItem(cameraInfo.description());
     }
-    sliderRGBinit();
 
-    initStyle();
+
 }
 
 MainWindow::~MainWindow()
@@ -71,6 +63,7 @@ MainWindow::~MainWindow()
     delete ui;
     delete time_clock;
     delete pTimer;
+    capture.release();
 }
 void MainWindow::on_Process_clicked()
 {
@@ -122,9 +115,21 @@ void MainWindow::LoopToDealFrame()
 {
     Mat srcImage;
     Mat forQImage;
-    if (capture.isOpened())
+    if(capture.isOpened())
     {
         capture >> srcImage;
+        fps = capture.get(CAP_PROP_FPS);
+        if(fps != 0.0){
+            string fpsString("FPS:");
+            fpsString += to_string(fps);
+            putText(srcImage, // 图像矩阵
+                                fpsString,                  // string型文字内容
+                                cv::Point(5, 20),           // 文字坐标，以左下角为原点
+                                cv::FONT_HERSHEY_SIMPLEX,   // 字体类型
+                                0.5, // 字体大小
+                                cv::Scalar(255, 0, 0));       // 字体颜色
+        }
+
         if (!srcImage.empty())
         {
             if(startProcess == true){
@@ -133,17 +138,19 @@ void MainWindow::LoopToDealFrame()
             cvtColor(srcImage, forQImage, CV_BGR2RGB); // opencv是BGR QImage是RGB
 
             //img = QImage((const unsigned char *)srcImage.data, srcImage.cols, srcImage.rows, QImage::Format_RGB888); //Format_RGB888
+
             img = QImage((const unsigned char *)forQImage.data, forQImage.cols, forQImage.rows, QImage::Format_RGB888); //Format_RGB888
 
             //QImage fitpixmap = img.scaled(ui->label->width(), ui->label->height(),
             //                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation);  // 饱满填充
+
             QImage fitpixmap = img.scaled(ui->label->width(), ui->label->height(),
                                           Qt::KeepAspectRatio, Qt::SmoothTransformation);  // 按比例缩放
 
             ui->label->setPixmap(QPixmap::fromImage(fitpixmap));
             ui->label->show();
 
-            if(REC_flag == true){
+            if(REC_flag == 1){
                 saveVideo << srcImage;
                 // ui->outputREC->append("add one frame");
             }
@@ -151,6 +158,7 @@ void MainWindow::LoopToDealFrame()
             ui->output->append("<font color=\"#FF0000\">视频读取结束</font>");
             return;
         }
+
     }
 }
 
@@ -187,7 +195,7 @@ double MainWindow::findLargestContour(cv::Mat &img, cv::Mat &out)
 
     if (maxIndex != 0)
     {
-        drawContours( out, contours, maxIndex, Scalar(_contoursRed,_contoursGreen,_contoursBlue), _thickness, _lineType, hierarchy, 0, Point() );
+        drawContours( out, contours, maxIndex, Scalar(_contoursBlue,_contoursGreen,_contoursRed), _thickness, _lineType, hierarchy, 0, Point() );
     }
 
     return maxArea;
@@ -239,7 +247,7 @@ void MainWindow::DealFrame(Mat &image)
 void MainWindow::on_StartREC_clicked()
 {
     if(capture.isOpened()){
-        REC_flag = true;
+        REC_flag = 1;
         QDateTime time = QDateTime::currentDateTime();
         QString dateTime = time.toString("yyyy-MM-dd-hh-mm-ss");
         QString file_name= QString("video%1.avi").arg(dateTime);
@@ -272,8 +280,8 @@ void MainWindow::on_StartREC_clicked()
 void MainWindow::on_EndREC_clicked()
 {
     if(capture.isOpened()){
-        if(REC_flag == true){
-            REC_flag = false;
+        if(REC_flag == 1 || REC_flag == 2){ //如果状态是 录像 或 暂停 那么可以结束
+            REC_flag = 0;
             saveVideo.release();
             ui->outputREC->append("<font color=\"#FF0000\">结束录制</font>");
             // 结束计时
@@ -285,8 +293,8 @@ void MainWindow::on_EndREC_clicked()
 void MainWindow::on_PauseREC_clicked()
 {
     if(capture.isOpened()){
-        if(REC_flag == true){
-            REC_flag = false;
+        if(REC_flag == 1){
+            REC_flag = 2;
             ui->outputREC->append("暂停");
         }
     }
@@ -300,11 +308,11 @@ void MainWindow::on_FilePath_clicked()
     //}
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_holdonREC_clicked()
 {
     if(capture.isOpened()){
-        if(REC_flag == false){
-            REC_flag = true;
+        if(REC_flag == 2){
+            REC_flag = 1;
             ui->outputREC->append("继续");
         }
     }
@@ -330,7 +338,19 @@ void MainWindow::updateDisplay()
     this->ui->Lcd_play->display(timeStr);
 }
 
-void MainWindow::sliderRGBinit(){
+void MainWindow::ui_init(){
+
+    setWindowFlags(windowFlags()&~Qt::WindowMaximizeButtonHint);    //禁止最大化
+    setFixedSize(this->width(),this->height()); // 禁止拖动窗口大小
+
+    ui->output->document()->setMaximumBlockCount(100);
+    ui->outputREC->document()->setMaximumBlockCount(100);
+
+    ui->output->append("欢迎使用红外热成像无人机协助搜救系统！");
+    ui->Lcd_play->display("00:00:00");
+
+    ui->label->setFrameShape (QFrame::Box);
+    ui->label->setStyleSheet("border-width: 1px;border-style: solid;border-color: rgb(128, 128, 128);");
 
 
     ui->BlueSlider->setMinimum(0);          //设置滑动条控件的最小值
@@ -375,8 +395,6 @@ void MainWindow::sliderRGBinit(){
     ui->thicknessText->setText(QString::number(_thickness));
     ui->thicknessSlider->setPageStep(1);
     connect(ui->thicknessSlider, SIGNAL(valueChanged(int)), this, SLOT(setLineEditValue_Thickness(int)));
-
-
 }
 
 void MainWindow::setContoursColor_Blue(int value){
@@ -477,13 +495,3 @@ void MainWindow::on_showColor_clicked()
         strcol.clear();
     }
 }
-
-
-//QColor  BenQWord::IntToQColor(const int &intColor)
-//{
-//    //将Color 从int 转换成 QColor
-//    int red = intColor & 255;
-//    int green = intColor >> 8 & 255;
-//    int blue = intColor >> 16 & 255;
-//    return QColor(red, green, blue);
-//}
