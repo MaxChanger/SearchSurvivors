@@ -54,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
     foreach (const QCameraInfo &cameraInfo , QCameraInfo::availableCameras()) {
         ui->getCameraName->addItem(cameraInfo.description());
     }
-
+    ui->getCameraName->addItem("FLIR Lepton");
 
 }
 
@@ -229,7 +229,7 @@ void MainWindow::DealFrame(Mat &image)
             // printf("Sent coordinates\n");
         }
         //printf("Found object: %fs\n", time);
-        str.sprintf("Found object: %fs", time);
+        str.sprintf("Found object: %fs", time);//(33.9456384530,108.8079071045)
         ui->output->append(str); // 每次向后追加
         // ui->output->setPlainText(str);
     }else{
@@ -346,7 +346,7 @@ void MainWindow::ui_init(){
     ui->output->document()->setMaximumBlockCount(100);
     ui->outputREC->document()->setMaximumBlockCount(100);
 
-    ui->output->append("欢迎使用红外热成像无人机协助搜救系统！");
+    ui->output->append("欢迎使用红外热成像协助搜救系统！");
     ui->Lcd_play->display("00:00:00");
 
     ui->label->setFrameShape (QFrame::Box);

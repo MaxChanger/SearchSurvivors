@@ -19,7 +19,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>红外热成像无人机协助搜救系统</string>
+   <string>红外热成像协助搜救系统</string>
   </property>
   <property name="windowIcon">
    <iconset resource="other/icon.qrc">
@@ -340,7 +340,7 @@ p, li { white-space: pre-wrap; }
     <property name="font">
      <font>
       <family>腾讯体</family>
-      <pointsize>12</pointsize>
+      <pointsize>14</pointsize>
      </font>
     </property>
     <property name="layoutDirection">
@@ -350,7 +350,7 @@ p, li { white-space: pre-wrap; }
      <bool>false</bool>
     </property>
     <property name="text">
-     <string>红外热成像无人机协助搜救系统</string>
+     <string>红外热成像协助搜救系统</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
